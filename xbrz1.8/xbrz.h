@@ -43,8 +43,8 @@ http://board.byuu.org/viewtopic.php?f=10&t=2248
 enum class ColorFormat //from high bits -> low bits, 8 bit per channel
 {
     RGB,  //8 bit for each red, green, blue, upper 8 bits unused
-    ARGB, //including alpha channel, BGRA byte order on little-endian machines
-    ARGB_UNBUFFERED, //like ARGB, but without the one-time buffer creation overhead (ca. 100 - 300 ms) at the expense of a slightly slower scaling time
+	RGBA, //including alpha channel, RGBA byte order on little-endian machines
+	RGBA_UNBUFFERED, //like RGBA, but without the one-time buffer creation overhead (ca. 100 - 300 ms) at the expense of a slightly slower scaling time
 };
 
 const int SCALE_FACTOR_MAX = 6;

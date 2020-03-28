@@ -1,27 +1,22 @@
+#include <QImage>
 #include <cstdio>
 #include "xbrz1.8/xbrz.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb/stb_image_write.h"
 
-int main(int argc, char const* const* argv)
+int main()
 {
-	int const kScale = 4;
+	int const SCALE = 4;
 
-	if (argc <= 1)
-		return 1;
-
-	int w,h,comp;
-	uint8_t* srcData = stbi_load(argv[1], &w, &h, &comp, 4);
-	{
-		uint8_t* dstData = new uint8_t[w*h*4*kScale*kScale];
+	QImage srcimage;
+	srcimage.load("lena.png");
+	srcimage = srcimage.convertToFormat(QImage::Format_RGBA8888);
+	int w = srcimage.width();
+	int h = srcimage.height();
+	if (w > 0 && h > 0) {
+		QImage dstimage(w * SCALE, h * SCALE, QImage::Format_RGBA8888);
 		{
 			xbrz::ScalerCfg cfg;
-			xbrz::scale(kScale, (uint32_t*)srcData, (uint32_t*)dstData, w, h, xbrz::ColorFormat::ARGB, cfg, 0, h);
-			stbi_write_png("out.png", w*kScale, h*kScale, 4, dstData, w*kScale*4);
+			xbrz::scale(SCALE, (uint32_t*)srcimage.bits(), (uint32_t*)dstimage.bits(), w, h, xbrz::ColorFormat::RGBA, cfg, 0, h);
 		}
-		delete[] dstData;
+		dstimage.save("out.png");
 	}
-	stbi_image_free(srcData);
 }

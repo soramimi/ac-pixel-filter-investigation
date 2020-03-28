@@ -29,7 +29,7 @@ namespace
 template <unsigned int M, unsigned int N> inline
 uint32_t gradientRGB(uint32_t pixFront, uint32_t pixBack) //blend front color with opacity M / N over opaque background: https://en.wikipedia.org/wiki/Alpha_compositing#Alpha_blending
 {
-    static_assert(0 < M && M < N && N <= 1000);
+//    static_assert(0 < M && M < N && N <= 1000);
 
     auto calcColor = [](unsigned char colFront, unsigned char colBack) -> unsigned char { return (colFront * M + colBack * (N - M)) / N; };
 
@@ -42,7 +42,7 @@ uint32_t gradientRGB(uint32_t pixFront, uint32_t pixBack) //blend front color wi
 template <unsigned int M, unsigned int N> inline
 uint32_t gradientARGB(uint32_t pixFront, uint32_t pixBack) //find intermediate color between two colors with alpha channels (=> NO alpha blending!!!)
 {
-    static_assert(0 < M && M < N && N <= 1000);
+//    static_assert(0 < M && M < N && N <= 1000);
 
     const unsigned int weightFront = getAlpha(pixFront) * M;
     const unsigned int weightBack  = getAlpha(pixBack) * (N - M);
@@ -365,7 +365,7 @@ inline void addBottomL  (unsigned char& b, BlendType bt) { b |= (bt << 6); } //
 
 inline bool blendingNeeded(unsigned char b)
 {
-    static_assert(BLEND_NONE == 0);
+//    static_assert(BLEND_NONE == 0);
     return b != 0;
 }
 
@@ -487,7 +487,8 @@ public:
 
     void readDhlp(Kernel_4x4& ker, int x) const //(x, y) is at kernel position F
     {
-        [[likely]] if (const int x_p2 = x + 2; 0 <= x_p2 && x_p2 < srcWidth_)
+		const int x_p2 = x + 2;
+		if (0 <= x_p2 && x_p2 < srcWidth_)
         {
             ker.d = s_m1 ? s_m1[x_p2] : 0;
             ker.h = s_0  ? s_0 [x_p2] : 0;
@@ -512,19 +513,25 @@ private:
 };
 
 
+template <typename T> static inline T clamp(T val, T min, T max)
+{
+	return std::max(std::min(val, max), min);
+
+}
+
 class OobReaderDuplicate
 {
 public:
     OobReaderDuplicate(const uint32_t* src, int srcWidth, int srcHeight, int y) :
-        s_m1(src + srcWidth * std::clamp(y - 1, 0, srcHeight - 1)),
-        s_0 (src + srcWidth * std::clamp(y,     0, srcHeight - 1)),
-        s_p1(src + srcWidth * std::clamp(y + 1, 0, srcHeight - 1)),
-        s_p2(src + srcWidth * std::clamp(y + 2, 0, srcHeight - 1)),
+		s_m1(src + srcWidth * clamp(y - 1, 0, srcHeight - 1)),
+		s_0 (src + srcWidth * clamp(y,     0, srcHeight - 1)),
+		s_p1(src + srcWidth * clamp(y + 1, 0, srcHeight - 1)),
+		s_p2(src + srcWidth * clamp(y + 2, 0, srcHeight - 1)),
         srcWidth_(srcWidth) {}
 
     void readDhlp(Kernel_4x4& ker, int x) const //(x, y) is at kernel position F
     {
-        const int x_p2 = std::clamp(x + 2, 0, srcWidth_ - 1);
+		const int x_p2 = clamp(x + 2, 0, srcWidth_ - 1);
         ker.d = s_m1[x_p2];
         ker.h = s_0 [x_p2];
         ker.l = s_p1[x_p2];
@@ -1165,7 +1172,7 @@ void xbrz::scale(size_t factor, const uint32_t* src, uint32_t* trg, int srcWidth
         return;
     }
 
-    static_assert(SCALE_FACTOR_MAX == 6);
+//    static_assert(SCALE_FACTOR_MAX == 6);
     switch (colFmt)
     {
         case ColorFormat::RGB:
@@ -1184,7 +1191,7 @@ void xbrz::scale(size_t factor, const uint32_t* src, uint32_t* trg, int srcWidth
             }
             break;
 
-        case ColorFormat::ARGB:
+		case ColorFormat::RGBA:
             switch (factor)
             {
                 case 2:
@@ -1200,7 +1207,7 @@ void xbrz::scale(size_t factor, const uint32_t* src, uint32_t* trg, int srcWidth
             }
             break;
 
-        case ColorFormat::ARGB_UNBUFFERED:
+		case ColorFormat::RGBA_UNBUFFERED:
             switch (factor)
             {
                 case 2:
@@ -1226,9 +1233,9 @@ bool xbrz::equalColorTest(uint32_t col1, uint32_t col2, ColorFormat colFmt, doub
     {
         case ColorFormat::RGB:
             return ColorDistanceRGB::dist(col1, col2, luminanceWeight) < equalColorTolerance;
-        case ColorFormat::ARGB:
+		case ColorFormat::RGBA:
             return ColorDistanceARGB::dist(col1, col2, luminanceWeight) < equalColorTolerance;
-        case ColorFormat::ARGB_UNBUFFERED:
+		case ColorFormat::RGBA_UNBUFFERED:
             return ColorDistanceUnbufferedARGB::dist(col1, col2, luminanceWeight) < equalColorTolerance;
     }
     assert(false);
